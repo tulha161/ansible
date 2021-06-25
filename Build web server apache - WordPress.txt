@@ -1,0 +1,81 @@
+#DOC : Build Wordpress Web Server Step-by-Step
+#OS : CentOS7	
+
+
+1, update, setup LAMP server
+
+yum update
+
+# cai dat apache web server 
+yum install httpd 
+systemctl start httpd
+systemctl enable httpd
+systemctl status httpd # kiem tra hoat dong 
+
+#mo port cho Apache server
+firewall-cmd --permanent --add-service=http
+systemctl restart firewalld
+#sau buoc nay co the test bang cach vao : http://server-ip-add
+
+# cai dat mariaDB
+yum install mariadb-server mariadb
+systemctl start mariadb
+systemctl enable mariadb
+systemctl status mariadb
+mysql_secure_installation #cai dat root_pass cho DB
+
+# cai dat php 7.3
+yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+yum --enablerepo=remi-php73 install php
+apachectl restart
+php -v # ket qua 7.3 la ok
+
+
+2, config MariaDB
+mysql -u root -p
+
+CREATE DATABASE wordpress;
+CREATE USER wordpressuser@localhost;
+SET PASSWORD FOR wordpressuser@localhost= PASSWORD("123456");
+GRANT ALL PRIVILEGES ON wordpress. * TO wordpressuser@localhost IDENTIFIED BY "123456";
+FLUSH PRIVILEGES;
+EXIT;
+
+
+3, cai dat WordPress
+wget http://wordpress.org/latest.tar.gz # download ban moi nhat
+tar xzvf latest.tar.gz # giai nen
+rsync -avP ~/wordpress/ /var/www/html/ # chuyen thu muc vao /var/www/html/
+mkdir /var/www/html/wp-content/uploads
+sudo chown -R apache:apache /var/www/html/* # cap quyen cho user dung apache
+#cau hinh wordpress
+cd /var/www/html
+cp wp-config-sample.php wp-config.php
+vi wp-config.php
+
+
+#### cau hinh MYSQL settings, trung voi DB da tao o mariaDB
+// ** MySQL settings - You can get this info from your web host ** //
+/** The name of the database for WordPress */
+define( 'DB_NAME', 'wordpress' );
+
+/** MySQL database username */
+define( 'DB_USER', 'wordpressuser' );
+
+/** MySQL database password */
+define( 'DB_PASSWORD', '123456' );
+
+/** MySQL hostname */
+define( 'DB_HOST', 'localhost' );
+
+/** Database Charset to use in creating database tables. */
+define( 'DB_CHARSET', 'utf8' );
+
+/** The Database Collate type. Don't change this if in doubt. */
+define( 'DB_COLLATE', '' ); 
+### DONE
+
+site : http://server-ip-add 
+or : http://server-ip-add/wp-admin
+
